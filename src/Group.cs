@@ -5,7 +5,6 @@ public class Group
 {
     public string Name { get; set; }
     public Regex Pattern { get; set; }
-    public List<IModel> Editables { get; } = new List<IModel>();
 
     public Group(string name, string pattern)
     {
