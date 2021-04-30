@@ -148,6 +148,9 @@ public class ColliderEditor : MVRScript
                 editable.ResetToInitial();
         });
 
+        var refreshUI = CreateButton("Refresh");
+        refreshUI.button.onClick.AddListener(Refresh);
+
         var groups = new List<string> { _noSelectionLabel };
         groups.AddRange(_editables.Groups.Select(e => e.Name).Distinct());
         groups.Add(_allLabel);
@@ -214,6 +217,51 @@ public class ColliderEditor : MVRScript
                 SelectEditable(null);
         };
 
+        UpdateFilter();
+    }
+
+    private void Refresh()
+    {
+        // destroy previews
+        foreach (var editable in _editables.All)
+            editable.DestroyPreview();
+
+        // rebuild
+        _editables = EditablesList.Build(this, _config);
+
+        // update groups
+        var oldGroup = _groupsJson.val;
+        var groups = new List<string> { _noSelectionLabel };
+        groups.AddRange(_editables.Groups.Select(e => e.Name).Distinct());
+        groups.Add(_allLabel);
+        _groupsJson.choices = groups;
+
+        if (groups.Contains(oldGroup))
+            _groupsJson.valNoCallback = oldGroup;
+        else
+            _groupsJson.valNoCallback = groups[0];
+
+        // update types
+        var oldType = _typesJson.val;
+        var types = new List<string> { _noSelectionLabel };
+        types.AddRange(_editables.All.Select(e => e.Type).Distinct());
+        types.Add(_allLabel);
+        _typesJson.choices = types;
+
+        if (types.Contains(oldType))
+            _typesJson.valNoCallback = oldType;
+        else
+            _typesJson.valNoCallback = types[0];
+
+        // reselect the editable
+        IModel val;
+        if (_editables.ByUuid.TryGetValue(_editablesJson.val, out val))
+            SelectEditable(val);
+        else
+            SelectEditable(null);
+
+        // note that valNoCallback was used above to avoid calling
+        // UpdateFilter() multiple times, so it needs to called manually here
         UpdateFilter();
     }
 

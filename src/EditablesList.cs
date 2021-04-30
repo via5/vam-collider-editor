@@ -121,12 +121,50 @@ public class EditablesList
 
         rigidbodies.RemoveAll(model => model.Colliders.Count == 0);
 
+        // clothing
+        var clothing = new List<IModel>();
+        var cs = containingAtom.GetComponentInChildren<DAZCharacterSelector>();
+
+        if (cs != null)
+        {
+            foreach (var c in cs.clothingItems)
+            {
+                if (!c.isActiveAndEnabled)
+                    continue;
+
+                var g = new Group(c.displayName, "");
+
+                // clothing items can have a left and a right collider, or
+                // neither, and they both have the same uuid, so Id is changed
+                // manually to add a suffix
+
+                if (c.colliderLeft != null)
+                {
+                    var m = new BoxColliderModel(script, c.colliderLeft, config);
+                    m.Id += ".Left";
+                    m.Group = g;
+                    groups.Add(g);
+                    clothing.Add(m);
+                }
+
+                if (c.colliderRight != null)
+                {
+                    var m = new BoxColliderModel(script, c.colliderRight, config);
+                    m.Id += ".Right";
+                    m.Group = g;
+                    groups.Add(g);
+                    clothing.Add(m);
+                }
+            }
+        }
+
         // All Editables
 
         var all = colliders.Cast<IModel>()
             .Concat(autoColliderGroups.Cast<IModel>())
             .Concat(autoColliders.Cast<IModel>())
             .Concat(rigidbodies.Cast<IModel>())
+            .Concat(clothing)
             .ToList();
 
         return new EditablesList(groups, all);
